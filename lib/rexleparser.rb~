@@ -6,7 +6,7 @@
 class RexleParser
 
   def initialize(s)
-    @a = scan_element(s.sub(/<\?[^>]+>/,'').split(//))    
+    @a = scan_element(s.split(//))    
   end
 
   def to_a()
