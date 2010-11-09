@@ -14,9 +14,11 @@ testdata.paths do |path|
 
     path.tested? title do |input, output|
       result = input.data('xml') {|xml| RexleParser.new(xml).to_a.inspect}
-      puts result
       puts
+      puts 'rsult : ' + result
+
       expected = output.data('xml')
+      puts 'expected : ' + expected
       result == expected
     end
   end

@@ -23,7 +23,7 @@
             <type>output</type>
             <xml>
               <![CDATA[
-["urls", "", nil, ["summary", "", nil, ["recordx_type", "dynarex", nil], ["format_mask", "[!short_url] [!full_url]", nil], ["schema", "urls/url(short_url,full_url)", nil]], ["records", "", nil, ["url", "", {"created"=>"2010-10-11 21:11:16 +0100", "id"=>"2", "last_modified"=>"2010-10-13 15:20:58 +0100"}, ["short_url", "aa", nil], ["full_url", "http://www.wired.com/", nil]]]]
+["urls", "", {}, ["summary", "", {}, ["recordx_type", "dynarex", {}], ["format_mask", "[!short_url] [!full_url]", {}], ["schema", "urls/url(short_url,full_url)", {}]], ["records", "", {}, ["url", "", {"created"=>"2010-10-11 21:11:16 +0100", "id"=>"2", "last_modified"=>"2010-10-13 15:20:58 +0100"}, ["short_url", "aa", {}], ["full_url", "http://www.wired.com/", {}]]]]
               ]]>
             </xml>
           </summary>
@@ -55,7 +55,7 @@
             <type>output</type>
             <xml>
               <![CDATA[
-["urls", "\n  ", nil, ["summary", "", nil, ["recordx_type", "dynarex", nil], ["format_mask", "[!short_url] [!full_url]", nil], ["schema", "urls/url(short_url,full_url)", nil]], ["records", "", nil, ["url", "      ", {"created"=>"2010-10-11 21:11:16 +0100", "id"=>"2", "last_modified"=>"2010-10-13 15:20:58 +0100"}, ["short_url", "aa", nil], ["full_url", "http://www.wired.com/", nil]]]]
+["urls", "\n  ", {}, ["summary", "", {}, ["recordx_type", "dynarex", {}], ["format_mask", "[!short_url] [!full_url]", {}], ["schema", "urls/url(short_url,full_url)", {}]], ["records", "", {}, ["url", "      ", {"created"=>"2010-10-11 21:11:16 +0100", "id"=>"2", "last_modified"=>"2010-10-13 15:20:58 +0100"}, ["short_url", "aa", {}], ["full_url", "http://www.wired.com/", {}]]]]
               ]]>
             </xml>
           </summary>
@@ -101,7 +101,65 @@
             <type>output</type>
             <xml>
               <![CDATA[
-["urls", "\n  ", nil, ["summary", "", nil, ["recordx_type", "dynarex", nil], ["format_mask", "[!short_url] [!full_url]", nil], ["schema", "urls/url(short_url,full_url)", nil]], ["records", "", nil, ["url", "      ", {"created"=>"2010-10-11 21:11:16 +0100", "id"=>"2", "last_modified"=>"2010-10-13 15:20:58 +0100"}, ["short_url", "aa", nil], ["full_url", "http://www.wired.com/", nil]]]]
+["urls", "\n  ", {}, ["summary", "", {}, ["recordx_type", "dynarex", {}], ["format_mask", "[!short_url] [!full_url]", {}], ["schema", "urls/url(short_url,full_url)", {}]], ["records", "", {}, ["url", "      ", {"created"=>"2010-10-11 21:11:16 +0100", "id"=>"2", "last_modified"=>"2010-10-13 15:20:58 +0100"}, ["short_url", "aa", {}], ["full_url", "http://www.wired.com/", {}]]]]
+              ]]>
+            </xml>
+          </summary>
+        </io>
+      </records>
+    </test>
+    <test>
+      <summary>
+        <path>4</path>
+        <type>XML validation</type>
+        <description>validate XML containing a self-closing tag</description>
+      </summary>
+      <records>
+        <io>
+          <summary>
+            <type>input</type>
+            <xml>
+              <![CDATA[
+<root><s><f/></s><a></a></root>
+              ]]>
+            </xml>
+          </summary>
+        </io>
+        <io>
+          <summary>
+            <type>output</type>
+            <xml>
+              <![CDATA[
+["root", "", {}, ["s", "", {}, ["f", "", nil]], ["a", "", {}]]
+              ]]>
+            </xml>
+          </summary>
+        </io>
+      </records>
+    </test>
+    <test>
+      <summary>
+        <path>5</path>
+        <type>XML validation</type>
+        <description>validate XML containing a self-closing tag with an attribute</description>
+      </summary>
+      <records>
+        <io>
+          <summary>
+            <type>input</type>
+            <xml>
+              <![CDATA[
+<root><s><f colour='blue'/></s><a></a></root>
+              ]]>
+            </xml>
+          </summary>
+        </io>
+        <io>
+          <summary>
+            <type>output</type>
+            <xml>
+              <![CDATA[
+["root", "", {}, ["s", "", {}, ["f", "", {"colour"=>"blue"}]], ["a", "", {}]]
               ]]>
             </xml>
           </summary>
