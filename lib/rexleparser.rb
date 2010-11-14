@@ -29,13 +29,13 @@ class RexleParser
       if name then
 
         # find the closing tag
-        i = a.index(a.detect{|x| x == '>'})
+        i = a.index('>')
         raw_values = ''
 
         # is it a self closing tag?
         if a[i-1] == '/' then          
           raw_values << a.shift until a[0] == '/'
-          2.times{a.shift}
+          a.shift until a[0] == '<' or a.length < 1
           raw_values.strip!
 
           attributes = get_attributes(raw_values) if raw_values.length > 0

@@ -30,7 +30,6 @@ class RexleParser
 
         # find the closing tag
         i = a.index(a.detect{|x| x == '>'})
-        # puts 'yow' 
         raw_values = ''
 
         # is it a self closing tag?
