@@ -46,7 +46,7 @@ class RexleParser
           value, attributes = get_value_and_attributes(raw_values) if raw_values.length > 0
 
           element = [name, value, attributes]
-
+          
           tag = a[0, name.length + 3].join
 
           if a.length > 0 then
@@ -55,10 +55,10 @@ class RexleParser
             children = false if tag == "</%s>" % name
 
             if children == true then
-              r = scan_element(a)
-              element << r if r
 
               (r = scan_element(a); element << r if r) until (a[0, name.length + 3].join == "</%s>" % [name]) or a.length < 2
+              a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
+              a.shift until a[0] == '<' or a.length <= 1   
             else
               #check for its end tag
               a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
