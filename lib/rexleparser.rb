@@ -22,55 +22,69 @@ class RexleParser
     if a.length > 1 then
       a.shift
 
-      name = ''
-      name << a.shift
-      name << a.shift while a[0] != ' ' and a[0] != '>' and a[0] != '/'
+      # CDATA ?
+      if a[0..1].join == '![' then
 
-      if name then
+        name = '!['
+        8.times{ a.shift }
+        value = ''
 
-        # find the closing tag
-        i = a.index('>')
-        raw_values = ''
+        value << a.shift until a[0..2].join == ']]>' or a.length <= 1
+        a.slice!(0,3)
+        element = [name, value, {}]        
+      else
 
-        # is it a self closing tag?
-        if a[i-1] == '/' then          
-          raw_values << a.shift until a[0] == '/'
-          a.shift until a[0] == '<' or a.length < 1
-          raw_values.strip!
+        name = ''
+        name << a.shift
+        name << a.shift while a[0] != ' ' and a[0] != '>' and a[0] != '/'
 
-          attributes = get_attributes(raw_values) if raw_values.length > 0
-          element = [name, '', attributes]
-        else
+        if name then
 
-          raw_values << a.shift until a[0] == '<'
-          value, attributes = get_value_and_attributes(raw_values) if raw_values.length > 0
+          # find the closing tag
+          i = a.index('>')
+          raw_values = ''
 
-          element = [name, value, attributes]
-          
-          tag = a[0, name.length + 3].join
+          # is it a self closing tag?
+          if a[i-1] == '/' then          
+            raw_values << a.shift until a[0] == '/'
+            a.shift until a[0] == '<' or a.length < 1
+            raw_values.strip!
 
-          if a.length > 0 then
+            attributes = get_attributes(raw_values) if raw_values.length > 0
+            element = [name, '', attributes]
+          else
 
-            children = true
-            children = false if tag == "</%s>" % name
+            raw_values << a.shift until a[0] == '<'
+            value, attributes = get_value_and_attributes(raw_values) if raw_values.length > 0
 
-            if children == true then
+            element = [name, value, attributes]
+            
+            tag = a[0, name.length + 3].join
 
-              (r = scan_element(a); element << r if r) until (a[0, name.length + 3].join == "</%s>" % [name]) or a.length < 2
-              a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
-              a.shift until a[0] == '<' or a.length <= 1   
-            else
-              #check for its end tag
-              a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
-              a.shift until a[0] == '<' or a.length <= 1   
+            if a.length > 0 then
+
+              children = true
+              children = false if tag == "</%s>" % name
+
+              if children == true then
+
+                (r = scan_element(a); element << r if r) until (a[0, name.length + 3].join == "</%s>" % [name]) or a.length < 2
+                a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
+                a.shift until a[0] == '<' or a.length <= 1   
+              else
+                #check for its end tag
+                a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
+                a.shift until a[0] == '<' or a.length <= 1   
+              end
             end
+            
           end
-          
+
+          return element
+
         end
-
-        element
-
       end
+
     end
   end
   
@@ -89,7 +103,7 @@ class RexleParser
   def get_attributes(raw_attributes)
     raw_attributes.scan(/(\w+\='[^']+')|(\w+\="[^"]+")/).map(&:compact).flatten.inject({}) do |r, x|
       attr_name, val = x.split(/=/) 
-      r.merge(attr_name => val[1..-2])
+      r.merge(attr_name.to_sym => val[1..-2])
     end
   end
 
