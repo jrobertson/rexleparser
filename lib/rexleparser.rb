@@ -5,8 +5,10 @@
 
 class RexleParser
 
-  def initialize(s)    
-    @a = scan_element(s.sub(/<\?[^>]+>/,'').split(//))    
+  def initialize(s)
+
+    super()
+    @a = scan_element(s.sub(/<\?[^>]+>/,'').split(//))        
   end
 
   def to_a()
@@ -46,7 +48,9 @@ class RexleParser
 
           # is it a self closing tag?
           if a[i-1] == '/' then          
-            raw_values << a.shift until a[0] == '/'
+
+            raw_values << a.shift until (a[0] + a[1..-1].join.strip[0]) == '/>'
+            puts 'raw_values: ' + raw_values
             a.shift until a[0] == '<' or a.length < 1
             raw_values.strip!
 
@@ -55,6 +59,7 @@ class RexleParser
           else
 
             raw_values << a.shift until a[0] == '<'
+            #puts 'raw_values: ' + raw_values.inspect
             value, attributes = get_value_and_attributes(raw_values) if raw_values.length > 0
 
             element = [name, value, attributes]
@@ -68,23 +73,45 @@ class RexleParser
 
               if children == true then
 
-                (r = scan_element(a); element << r if r) until (a[0, name.length + 3].join == "</%s>" % [name]) or a.length < 2
+                scan_elements(a, element) until (a[0, name.length + 3].join == "</%s>" % [name]) or a.length < 2
+
+                #(r = scan_element(a); element << r if r) until (a[0, name.length + 3].join == "</%s>" % [name]) or a.length < 2                
                 a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
                 a.shift until a[0] == '<' or a.length <= 1   
               else
+
                 #check for its end tag
                 a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
-                a.shift until a[0] == '<' or a.length <= 1   
+                text_remaining = []
+                text_remaining << a.shift until a[0] == '<' or a.length <= 1   
+
+                remaining = text_remaining.join unless text_remaining.empty?
+                #puts 'element: ' + element.inspect
               end
             end
             
           end
 
-          return element
+          #return remaining ? [element, remaining] : element
+          if remaining.nil? then
+            return element
+          else
+            return [element, remaining]
+          end
 
         end
       end
 
+    end
+  end
+  
+  def scan_elements(a, element)
+    r = scan_element(a)
+
+    if r and r[0].is_a?(Array) then
+      element = r.inject(element) {|r,x| r << x} if r       
+    elsif r      
+      element << r
     end
   end
   
@@ -101,10 +128,10 @@ class RexleParser
   end
 
   def get_attributes(raw_attributes)
-    raw_attributes.scan(/(\w+\='[^']+')|(\w+\="[^"]+")/).map(&:compact).flatten.inject({}) do |r, x|
+    raw_attributes.scan(/([\w:]+\='[^']+')|([\w:]+\="[^"]+")/).map(&:compact).flatten.inject({}) do |r, x|
+
       attr_name, val = x.split(/=/) 
       r.merge(attr_name.to_sym => val[1..-2])
     end
   end
-
 end
