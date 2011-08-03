@@ -15,8 +15,21 @@ class RexleParser
     @a
   end
 
+  def to_s()
+    name, value, attributes, *remaining = @a
+   [value.strip, scan_a(remaining)].flatten.join(' ')
+  end
+  
   private
- 
+    
+  def scan_a(a)
+    a.inject([]) do |r, x|
+      name, value, attributes, *remaining = x
+      text_remaining = scan_a remaining if remaining
+      r << value.strip << text_remaining if value
+    end
+  end
+   
   def scan_element(a)
 
     a.shift until a[0] == '<' and a[1] != '/' or a.length < 1        
@@ -50,12 +63,15 @@ class RexleParser
           if a[i-1] == '/' then          
 
             raw_values << a.shift until (a[0] + a[1..-1].join.strip[0]) == '/>'
-            puts 'raw_values: ' + raw_values
+
             a.shift until a[0] == '<' or a.length < 1
             raw_values.strip!
 
             attributes = get_attributes(raw_values) if raw_values.length > 0
+            
             element = [name, '', attributes]
+
+            element
           else
 
             raw_values << a.shift until a[0] == '<'
@@ -89,11 +105,12 @@ class RexleParser
                 #puts 'element: ' + element.inspect
               end
             end
-            
+
+            element
           end
 
-          #return remaining ? [element, remaining] : element
-          if remaining.nil? then
+          
+          if remaining.nil? or remaining.strip.empty? then
             return element
           else
             return [element, remaining]
