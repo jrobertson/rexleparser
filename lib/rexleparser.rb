@@ -110,7 +110,7 @@ class RexleParser
           end
 
           
-          if remaining.nil? or remaining.strip.empty? then
+          if remaining.nil? then #or remaining.strip.empty? then
             return element
           else
             return [element, remaining]
