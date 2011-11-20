@@ -47,6 +47,16 @@ class RexleParser
         value << a.shift until a[0..2].join == ']]>' or a.length <= 1
         a.slice!(0,3)
         element = [name, value, {}]        
+      elsif a[0..2].join == '!--' then
+        name = '!-'
+	#<![CDATA[
+	#<!--
+        3.times{ a.shift }
+        value = ''
+
+        value << a.shift until a[0..2].join == '-->' or a.length <= 1
+        a.slice!(0,3)
+        element = [name, value, {}]		
       else
 
         name = ''
@@ -145,10 +155,12 @@ class RexleParser
   end
 
   def get_attributes(raw_attributes)
-    raw_attributes.scan(/([\w:]+\='[^']+')|([\w:]+\="[^"]+")/).map(&:compact).flatten.inject({}) do |r, x|
+    r =  raw_attributes.scan(/([\w:]+\='[^']*)'|([\w:]+\="[^"]*)"/).map(&:compact).flatten.inject({}) do |r, x|
 
       attr_name, val = x.split(/=/) 
-      r.merge(attr_name.to_sym => val[1..-2])
+      r.merge(attr_name.to_sym => val[1..-1])
     end
+
+    return r
   end
 end
