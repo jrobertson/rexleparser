@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 # file: rexleparser.rb
 # description: used by rexle.rb
@@ -46,18 +46,17 @@ class RexleParser
 
         value << a.shift until a[0..2].join == ']]>' or a.length <= 1
         a.slice!(0,3)
-        element = [name, value, {}]
-                                          
+        element = [name, value, {}]        
       elsif a[0..2].join == '!--' then
         name = '!-'
-	#<![CDATA[
-	#<!--
+        #<![CDATA[
+        #<!--
         3.times{ a.shift }
         value = ''
 
         value << a.shift until a[0..2].join == '-->' or a.length <= 1
         a.slice!(0,3)
-        element = [name, value, {}]		
+        element = [name, value, {}]             
       else
 
         name = ''

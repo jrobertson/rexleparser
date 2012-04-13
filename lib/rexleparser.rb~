@@ -8,7 +8,7 @@ class RexleParser
   def initialize(s)
 
     super()
-    @a = scan_element(s.sub(/<\?[^>]+>/,'').split(//))        
+    @a = scan_element(s.gsub(/<\?[^>]+>/,'').split(//))        
   end
 
   def to_a()
@@ -46,7 +46,8 @@ class RexleParser
 
         value << a.shift until a[0..2].join == ']]>' or a.length <= 1
         a.slice!(0,3)
-        element = [name, value, {}]        
+        element = [name, value, {}]
+                                          
       elsif a[0..2].join == '!--' then
         name = '!-'
 	#<![CDATA[
