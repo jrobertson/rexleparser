@@ -155,8 +155,11 @@ class RexleParser
   end
 
   def get_attributes(raw_attributes)
-    r =  raw_attributes.scan(/([\w:]+\='[^']*)'|([\w:]+\="[^"]*)"/).map(&:compact).flatten.inject({}) do |r, x|
-
+    
+    r1 = /([\w\-:]+\='[^']*)'/
+    r2 = /([\w\-:]+\="[^"]*)"/
+    
+    r =  raw_attributes.scan(/#{r1}|#{r2}/).map(&:compact).flatten.inject({}) do |r, x|
       attr_name, val = x.split(/=/) 
       r.merge(attr_name.to_sym => val[1..-1])
     end
