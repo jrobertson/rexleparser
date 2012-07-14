@@ -6,14 +6,11 @@
 class RexleParser
 
   def initialize(s)
-
     super()
     @a = scan_element(s.gsub(/<\?[^>]+>/,'').split(//))        
   end
 
-  def to_a()
-    @a
-  end
+  def to_a()  @a end
 
   def to_s()
     name, value, attributes, *remaining = @a
@@ -34,116 +31,107 @@ class RexleParser
 
     a.shift until a[0] == '<' and a[1] != '/' or a.length < 1        
 
-    if a.length > 1 then
-      a.shift
+    return unless a.length > 1
 
-      # CDATA ?
-      if a[0..1].join == '![' then
+    a.shift
 
-        name = '!['
-        8.times{ a.shift }
-        value = ''
+    # CDATA ?
+    if a[0..1].join == '![' then
 
-        value << a.shift until a[0..2].join == ']]>' or a.length <= 1
-        a.slice!(0,3)
-        element = [name, value, {}]        
-      elsif a[0..2].join == '!--' then
-        name = '!-'
-        #<![CDATA[
-        #<!--
-        3.times{ a.shift }
-        value = ''
+      name = '!['
+      8.times{ a.shift }
+      value = ''
 
-        value << a.shift until a[0..2].join == '-->' or a.length <= 1
-        a.slice!(0,3)
-        element = [name, value, {}]             
+      value << a.shift until a[0..2].join == ']]>' or a.length <= 1
+      a.slice!(0,3)
+      element = [name, value, {}]        
+    elsif a[0..2].join == '!--' then
+      name = '!-'
+      #<![CDATA[
+      #<!--
+      3.times{ a.shift }
+      value = ''
+
+      value << a.shift until a[0..2].join == '-->' or a.length <= 1
+      a.slice!(0,3)
+      element = [name, value, {}]   
+    else
+
+      name = ''
+      name << a.shift
+      name << a.shift while a[0] != ' ' and a[0] != '>' and a[0] != '/'
+
+      return unless name
+
+      # find the closing tag
+      i = a.index('>')
+      raw_values = ''
+
+      # is it a self closing tag?
+      if a[i-1] == '/' then          
+
+        raw_values << a.shift until (a[0] + a[1..-1].join.strip[0]) == '/>'
+        a.shift until a[0] == '<' or a.length < 1
+        raw_values.strip!
+
+        attributes = get_attributes(raw_values) if raw_values.length > 0            
+        return [name, '', attributes]                    
+
       else
 
-        name = ''
-        name << a.shift
-        name << a.shift while a[0] != ' ' and a[0] != '>' and a[0] != '/'
+        raw_values << a.shift until a[0] == '<'
+        
+        if raw_values.length > 0 then
+          value, attributes = get_value_and_attribs(raw_values) 
+        end
+        
+        element = [name, value, attributes]        
+        tag = a[0, name.length + 3].join
 
-        if name then
+        return unless a.length > 0
+                
+        children = tag == ("</%s>" % name) ? false : true
 
-          # find the closing tag
-          i = a.index('>')
-          raw_values = ''
+        if children == true then
 
-          # is it a self closing tag?
-          if a[i-1] == '/' then          
+          xa = scan_elements(a, element) until (a[0, name.length + 3].join \
+                                         == "</%s>" % [name]) or a.length < 2
 
-            raw_values << a.shift until (a[0] + a[1..-1].join.strip[0]) == '/>'
-
-            a.shift until a[0] == '<' or a.length < 1
-            raw_values.strip!
-
-            attributes = get_attributes(raw_values) if raw_values.length > 0
-            
-            element = [name, '', attributes]
-
-            element
-          else
-
-            raw_values << a.shift until a[0] == '<'
-            #puts 'raw_values: ' + raw_values.inspect
-            value, attributes = get_value_and_attributes(raw_values) if raw_values.length > 0
-
-            element = [name, value, attributes]
-            
-            tag = a[0, name.length + 3].join
-
-            if a.length > 0 then
-
-              children = true
-              children = false if tag == "</%s>" % name
-
-              if children == true then
-
-                scan_elements(a, element) until (a[0, name.length + 3].join == "</%s>" % [name]) or a.length < 2
-
-                #(r = scan_element(a); element << r if r) until (a[0, name.length + 3].join == "</%s>" % [name]) or a.length < 2                
-                a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
-                a.shift until a[0] == '<' or a.length <= 1   
-              else
-
-                #check for its end tag
-                a.slice!(0, name.length + 3) if a[0, name.length + 3].join == "</%s>" % name
-                text_remaining = []
-                text_remaining << a.shift until a[0] == '<' or a.length <= 1   
-
-                remaining = text_remaining.join unless text_remaining.empty?
-                #puts 'element: ' + element.inspect
-              end
-            end
-
-            element
-          end
-
+          xa.shift until xa[0] == '>' or xa.length <= 1
+          xa.shift                                
+          after_text = []
+          after_text << xa.shift until xa[0] == '<' or xa.length <= 1
           
-          if remaining.nil? then #or remaining.strip.empty? then
-            return element
-          else
-            return [element, remaining]
-          end
+          return after_text.length >= 1 ? [element, after_text.join] : element
+
+        else
+
+          #check for its end tag
+          a.slice!(0, name.length + 3) if a[0, name.length + 3].join \
+                                                  == "</%s>" % name
+          after_text = []
+          after_text << a.shift until a[0] == '<' or a.length <= 1   
+
+          return after_text.length >= 1 ? [element, after_text.join] : element
 
         end
       end
-
     end
+
   end
   
   def scan_elements(a, element)
     r = scan_element(a)
 
     if r and r[0].is_a?(Array) then
-      element = r.inject(element) {|r,x| r << x} if r       
+      element = r.inject(element) {|r,x|  r << x} if r       
     elsif r      
       element << r
     end
+    return a
   end
   
-  def get_value_and_attributes(raw_values)
-    attributes = {}
+  def get_value_and_attribs(raw_values)
 
     match_found = raw_values.match(/(.*)>([^>]*$)/)
     if match_found then

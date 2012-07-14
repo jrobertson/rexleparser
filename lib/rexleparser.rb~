@@ -155,6 +155,7 @@ class RexleParser
   end
 
   def get_attributes(raw_attributes)
+    
     r1 = /([\w\-:]+\='[^']*)'/
     r2 = /([\w\-:]+\="[^"]*)"/
     
