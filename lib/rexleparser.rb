@@ -44,7 +44,7 @@ class RexleParser
 
       value << a.shift until a[0..2].join == ']]>' or a.length <= 1
       a.slice!(0,3)
-      element = [name, value, {}]        
+      return [name, value, {}]        
     elsif a[0..2].join == '!--' then
       name = '!-'
       #<![CDATA[
@@ -54,7 +54,7 @@ class RexleParser
 
       value << a.shift until a[0..2].join == '-->' or a.length <= 1
       a.slice!(0,3)
-      element = [name, value, {}]   
+      return [name, value, {}]    
     else
 
       name = ''
