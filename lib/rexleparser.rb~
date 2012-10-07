@@ -7,7 +7,7 @@ class RexleParser
 
   def initialize(s)
     super()
-    @a = scan_element(s.strip.gsub(/<\?[^>]+>/,'').split(//))
+    @a = scan_element(s.strip.gsub(/<\?[^>]+>/,'').split(//)) 
   end
 
   def to_a()  @a end
@@ -71,11 +71,18 @@ class RexleParser
       if a[i-1] == '/' then          
 
         raw_values << a.shift until (a[0] + a[1..-1].join.strip[0]) == '/>'
-        a.shift until a[0] == '<' or a.length < 1
+        a.shift(2)
+
+        after_text = []
+        after_text << a.shift until a[0] == '<' or a.length <= 1 
+        #a.shift until a[0] == '<' or a.length < 1
         raw_values.strip!
 
-        attributes = get_attributes(raw_values) if raw_values.length > 0            
-        return [name, '', attributes]                    
+        attributes = get_attributes(raw_values) if raw_values.length > 0
+        element = [name, '', attributes]            
+
+        return [element] if after_text.empty?
+        return [element, after_text.join]
 
       else
 
