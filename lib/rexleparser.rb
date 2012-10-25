@@ -140,7 +140,7 @@ class RexleParser
   
   def get_value_and_attribs(raw_values)
 
-    match_found = raw_values.match(/([^>]*)>(.*)/)
+    match_found = raw_values.match(/([^>]*)>(.*)/m)
     
     if match_found then
       raw_attributes, value = match_found.captures
