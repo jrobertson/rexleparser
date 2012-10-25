@@ -81,7 +81,7 @@ class RexleParser
         attributes = get_attributes(raw_values) if raw_values.length > 0
         element = [name, '', attributes]            
 
-        return [element] if after_text.empty?
+        return element if after_text.empty?
         return [element, after_text.join]
 
       else
@@ -155,7 +155,7 @@ class RexleParser
     r2 = /([\w\-:]+\="[^"]*)"/
     
     r =  raw_attributes.scan(/#{r1}|#{r2}/).map(&:compact).flatten.inject({}) do |r, x|
-      attr_name, val = x.split(/=/) 
+      attr_name, val = x.split(/=/,2) 
       r.merge(attr_name.to_sym => val[1..-1])
     end
 

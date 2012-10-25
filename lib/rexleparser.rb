@@ -87,7 +87,7 @@ class RexleParser
       else
 
         raw_values << a.shift until a[0] == '<'
-        
+
         if raw_values.length > 0 then
           value, attributes = get_value_and_attribs(raw_values) 
         end
@@ -140,13 +140,14 @@ class RexleParser
   
   def get_value_and_attribs(raw_values)
 
-    match_found = raw_values.match(/(.*)>([^>]*$)/)
+    match_found = raw_values.match(/([^>]*)>(.*)/)
+    
     if match_found then
       raw_attributes, value = match_found.captures
       attributes = get_attributes(raw_attributes)
     end
 
-    [value, attributes]
+    [value.gsub('>','&gt;').gsub('<','&lt;'), attributes]
   end
 
   def get_attributes(raw_attributes)
