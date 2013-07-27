@@ -1,9 +1,12 @@
 Gem::Specification.new do |s|
   s.name = 'rexleparser'
-  s.version = '0.4.9'
+  s.version = '0.4.10'
   s.summary = 'Rexleparser is an XML parser used by the Rexle gem'
   s.authors = ['James Robertson']
   s.files = Dir['lib/**/*.rb'] 
   s.signing_key = '../privatekeys/rexleparser.pem'
   s.cert_chain  = ['gem-public_cert.pem']
+  s.license = 'MIT'
+  s.email = 'james@r0bertson.co.uk'
+  s.homepage = 'https://github.com/jrobertson/rexleparser'
 end
