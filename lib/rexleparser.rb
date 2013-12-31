@@ -5,8 +5,11 @@
 
 class RexleParser
 
+  attr_reader :instructions
+
   def initialize(s)
     super()
+    @instructions = s.scan(/<\?([\w-]+) ([^>]+)\?>/)
     @a = scan_element(s.strip.gsub(/<\?[^>]+>/,'').split(//)) 
   end
 
