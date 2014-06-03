@@ -5,8 +5,11 @@
 
 class RexleParser
 
+  attr_reader :instructions
+
   def initialize(s)
     super()
+    @instructions = s.scan(/<\?([\w-]+) ([^>]+)\?>/)
     @a = scan_element(s.strip.gsub(/<\?[^>]+>/,'').split(//)) 
   end
 
@@ -140,7 +143,7 @@ class RexleParser
   
   def get_value_and_attribs(raw_values)
 
-    match_found = raw_values.match(/([^>]*)>(.*)/)
+    match_found = raw_values.match(/([^>]*)>(.*)/m)
     
     if match_found then
       raw_attributes, value = match_found.captures
