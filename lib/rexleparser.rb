@@ -81,7 +81,7 @@ class RexleParser
         #a.shift until a[0] == '<' or a.length < 1
         raw_values.strip!
 
-        attributes = get_attributes(raw_values) if raw_values.length > 0
+        attributes = raw_values.length > 0 ? get_attributes(raw_values) : {}
         element = [name, nil, attributes]            
 
         return element if after_text.empty?
@@ -95,7 +95,7 @@ class RexleParser
           value, attributes = get_value_and_attribs(raw_values) 
         end
         
-        element = [name, value, attributes]        
+        element = [name, value, attributes || {}]        
         tag = a[0, name.length + 3].join
 
         return unless a.length > 0
