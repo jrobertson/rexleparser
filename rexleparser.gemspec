@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'rexleparser'
-  s.version = '0.4.16'
+  s.version = '0.4.18'
   s.summary = 'Rexleparser is an XML parser used by the Rexle gem'
   s.authors = ['James Robertson']
   s.files = Dir['lib/**/*.rb'] 
@@ -9,4 +9,5 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
   s.email = 'james@r0bertson.co.uk'
   s.homepage = 'https://github.com/jrobertson/rexleparser'
+  s.required_ruby_version = '>= 2.1.2'
 end
