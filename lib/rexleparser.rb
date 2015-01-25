@@ -14,8 +14,8 @@ class RexleParser
     @instructions = s.scan(/<\?([\w-]+) ([^>]+)\?>/)
     @doctype = s.slice!(/<!DOCTYPE html>\n?/)
 
-    s2 = s.gsub('<![CDATA[','<!cdata>').gsub(']]>','</!cdata>')
-    @to_a = reverse(parse(s2.strip.gsub(/<\?[^>]+>/,'').reverse))
+    s2 = s.gsub('<![CDATA[','<!--').gsub(']]>','-->')
+    @to_a = reverse(parse_node(s2.strip.gsub(/<\?[^>]+>/,'').reverse))
     
   end
   
@@ -24,7 +24,7 @@ class RexleParser
     
 
   def scan_next(r, tagname)
-
+    
     j = tagname
 
     if (r =~ /^>/) == 0 then
@@ -48,6 +48,11 @@ class RexleParser
           # broken tag found
           broken_tag = tag
           return [:child, [nil, [], broken_tag]] if broken_tag
+          
+        elsif tag[/^>--(.*)--!</] then
+          
+          # it's a comment tag
+          return [:child, $1]
         else
 
           text, tag =  tag.sub('>',';tg&').split(/>/,2)
@@ -70,14 +75,17 @@ class RexleParser
     end
   end
 
-  def parse(r, j=nil)
+  def parse_node(r, j=nil)
+    
+    return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
-        
-    if tag[0,3] == '>--' then
+
+    if tag and tag[0,3] == '>--' then
 
       i = r =~ /<--/
       tag += r.slice!(0,i+5)
+      
       # it's a comment tag
       tagname = '-!'
       return [">#{tagname}<", [tag[/>--(.*)--!</,1]], ">#{tagname}/<"] 
@@ -95,15 +103,18 @@ class RexleParser
     until end_tag do 
 
       key, res = scan_next r, tagname
-
+      
       case key 
       when :end_tag
         end_tag = res
-        return [start_tag, children, end_tag]
+        r2 = [start_tag, children, end_tag]
+        end_tag = nil
+        
+        return r2
       when :child
         children << res
       when :newnode
-        children << parse(r, tagname)
+        children << parse_node(r, tagname)
       end
     end
 
@@ -127,6 +138,7 @@ class RexleParser
 
   def reverse(raw_obj)
     
+    return unless raw_obj
     obj = raw_obj.clone
     return obj.reverse! if obj.is_a? String
 
