@@ -5,154 +5,109 @@
 
 class RexleParser
 
-  attr_reader :instructions, :doctype
+  attr_reader :instructions, :doctype, :to_a
 
   def initialize(raw_s)
+    
     super()
     s = raw_s.clone
     @instructions = s.scan(/<\?([\w-]+) ([^>]+)\?>/)
     @doctype = s.slice!(/<!DOCTYPE html>\n?/)
-    @a = scan_element(s.strip.gsub(/<\?[^>]+>/,'').split(//)) 
-  end
 
-  def to_a()  @a end
-
-  def to_s()
-    name, value, attributes, *remaining = @a
-   [value.strip, scan_a(remaining)].flatten.join(' ')
+    s2 = s.gsub('<![CDATA[','<!cdata>').gsub(']]>','</!cdata>')
+    @to_a = reverse(parse(s2.strip.gsub(/<\?[^>]+>/,'').reverse))
+    
   end
+  
   
   private
     
-  def scan_a(a)
-    a.inject([]) do |r, x|
-      name, value, attributes, *remaining = x
-      text_remaining = scan_a remaining if remaining
-      r << value.strip << text_remaining if value
-    end
-  end
-   
-  def scan_element(a)
 
-    a.shift until a[0] == '<' and a[1] != '/' or a.length < 1        
+  def scan_next(r, tagname)
 
-    return unless a.length > 1
+    j = tagname
 
-    a.shift
+    if (r =~ /^>/) == 0 then
+      
+      # end tag match
+      tag = r[/^>[^<]+</]
 
-    # CDATA ?
-    if a[0..1].join == '![' then
+      if tag[/^>.*[^\/]<$/] then
 
-      name = '!['
-      8.times{ a.shift }
-      value = ''
+        # is it the end tag to match the start tag?
+        tag = r.slice!(/^>[^<]+</)
+        end_tag = tag[/^>[^>]*#{j}<$/]
 
-      value << a.shift until a[0..2].join == ']]>' or a.length <= 1
-      a.slice!(0,3)
-      return [name, value, {}]        
-    elsif a[0..2].join == '!--' then
-      name = '!-'
-      #<![CDATA[
-      #<!--
-      3.times{ a.shift }
-      value = ''
+        if end_tag then
+          
+          j = nil
+          return   [:end_tag, end_tag]
 
-      value << a.shift until a[0..2].join == '-->' or a.length <= 1
-      a.slice!(0,3)
-      return [name, value, {}]          
-    else
+        elsif tag[/^>[^>]*\w+<$/] then
+           
+          # broken tag found
+          broken_tag = tag
+          return [:child, [nil, [], broken_tag]] if broken_tag
+        else
 
-      name = ''
-      name << a.shift
-      name << a.shift while a[0] != ' ' and a[0] != '>' and a[0] != '/'
-
-      return unless name
-
-      # find the closing tag
-      i = a.index('>')
-      raw_values = ''
-
-      # is it a self closing tag?
-      if a[i-1] == '/' then          
-
-        raw_values << a.shift until (a[0] + a[1..-1].join.strip[0]) == '/>'
-        a.shift(2)
-
-        after_text = []
-        after_text << a.shift until a[0] == '<' or a.length <= 1 
-        #a.shift until a[0] == '<' or a.length < 1
-        raw_values.strip!
-
-        attributes = raw_values.length > 0 ? get_attributes(raw_values) : {}
-        element = [name, nil, attributes]            
-
-        return element if after_text.empty?
-        return [element, after_text.join]
+          text, tag =  tag.sub('>',';tg&').split(/>/,2)
+          r.prepend '>' + tag
+          return [:child, text]
+        end            
 
       else
 
-        raw_values << a.shift until a[0] == '<'
+        # it's a start tag?
+        return [:newnode] if tag[/^>.*[\w!]+\/<$/]
 
-        if raw_values[1..-1].length > 0 then
-          value, attributes = get_value_and_attribs(raw_values) 
-        end
+      end # end of tag match
+
+    else
+
+      # it's a text value
+      text = r.slice!(/[^>]+/)
+      return [:child, text] if text
+    end
+  end
+
+  def parse(r, j=nil)
+
+    tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
         
-        element = [name, value, attributes || {}]        
-        tag = a[0, name.length + 3].join
+    if tag[0,3] == '>--' then
 
-        return unless a.length > 0
-                
-        children = tag == ("</%s>" % name) ? false : true
+      i = r =~ /<--/
+      tag += r.slice!(0,i+5)
+      # it's a comment tag
+      tagname = '-!'
+      return [">#{tagname}<", [tag[/>--(.*)--!</,1]], ">#{tagname}/<"] 
+    end
+    
+    tagname = tag[/([\w!]+)\/?<$/,1] 
 
-        if children == true then
+    # self closing tag?
+    if tag[/^>\/.*#{tagname}<$/] then
+      return [">/#{tagname}<", [], "#{tag.sub(/>\//,'>')}"]
+    end
 
-          xa = scan_elements(a, element) until (a[0, name.length + 3].join \
-                                         == "</%s>" % [name]) or a.length < 2
+    start_tag, children, end_tag = tag, [], nil
 
-          xa.shift until xa[0] == '>' or xa.length <= 1
-          xa.shift                                
-          after_text = []
-          after_text << xa.shift until xa[0] == '<' or xa.length <= 1
-          
-          return after_text.length >= 1 ? [element, after_text.join] : element
+    until end_tag do 
 
-        else
+      key, res = scan_next r, tagname
 
-          #check for its end tag
-          a.slice!(0, name.length + 3) if a[0, name.length + 3].join \
-                                                  == "</%s>" % name
-          after_text = []
-          after_text << a.shift until a[0] == '<' or a.length <= 1   
-
-          return after_text.length >= 1 ? [element, after_text.join] : element
-
-        end
+      case key 
+      when :end_tag
+        end_tag = res
+        return [start_tag, children, end_tag]
+      when :child
+        children << res
+      when :newnode
+        children << parse(r, tagname)
       end
     end
 
-  end
-  
-  def scan_elements(a, element)
-    r = scan_element(a)
-
-    if r and r[0].is_a?(Array) then
-      element = r.inject(element) {|r,x|  r << x} if r       
-    elsif r      
-      element << r
-    end
-    return a
-  end
-  
-  def get_value_and_attribs(raw_values)
-
-    match_found = raw_values.match(/([^>]*)>(.*)/m)
-    
-    if match_found then
-      raw_attributes, value = match_found.captures
-      attributes = get_attributes(raw_attributes)
-    end
-
-    [value.gsub('>','&gt;').gsub('<','&lt;'), attributes]
+    [start_tag,  children, end_tag]
   end
 
   def get_attributes(raw_attributes)
@@ -169,4 +124,27 @@ class RexleParser
 
     return r
   end
+
+  def reverse(raw_obj)
+    
+    obj = raw_obj.clone
+    return obj.reverse! if obj.is_a? String
+
+    tag = obj.pop.reverse.sub('!cdata','!-')
+    
+    children = obj[-1]
+
+    if children.last.is_a?(String) then
+      ltext ||= ''
+      ltext << children.pop.reverse 
+    end
+    
+    ltext << children.pop.reverse if children.last.is_a?(String) 
+
+    r = children.reverse.map do |x|
+      reverse(x)
+    end
+    
+    return [tag[/[!\-\w\[]+/], ltext, get_attributes(tag), *r]
+  end  
 end

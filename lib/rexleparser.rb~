@@ -5,11 +5,13 @@
 
 class RexleParser
 
-  attr_reader :instructions
+  attr_reader :instructions, :doctype
 
-  def initialize(s)
+  def initialize(raw_s)
     super()
+    s = raw_s.clone
     @instructions = s.scan(/<\?([\w-]+) ([^>]+)\?>/)
+    @doctype = s.slice!(/<!DOCTYPE html>\n?/)
     @a = scan_element(s.strip.gsub(/<\?[^>]+>/,'').split(//)) 
   end
 
