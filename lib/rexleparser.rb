@@ -24,11 +24,11 @@ class RexleParser
     
 
   def scan_next(r, tagname)
-    
+
     j = tagname
 
     if (r =~ /^>/) == 0 then
-      
+
       # end tag match
       tag = r[/^>[^<]+</]
 
@@ -49,17 +49,24 @@ class RexleParser
           broken_tag = tag
           return [:child, [nil, [], broken_tag]] if broken_tag
           
-        elsif tag[/^>--(.*)--!</] then
-          
+        elsif tag[/^>--.*--!</] then
+
           # it's a comment tag
-          return [:child, $1]
+          return [:child, create_comment(tag)]
         else
 
           text, tag =  tag.sub('>',';tg&').split(/>/,2)
           r.prepend '>' + tag
           return [:child, text]
-        end            
+        end
+        
+      elsif tag[/^>--.*--!</m] then
+        
+        i = r =~ /--!</
+        tag = r.slice!(0,i+4)
 
+        # it's a comment tag
+        return [:child, create_comment(tag)]
       else
 
         # it's a start tag?
@@ -75,6 +82,11 @@ class RexleParser
     end
   end
 
+  def create_comment(tag)
+    tagname = '-!'
+    return [">#{tagname}<", [tag[/>--(.*)--!</m,1]], ">#{tagname}/<"] 
+  end
+  
   def parse_node(r, j=nil)
     
     return unless r.length > 0
@@ -87,8 +99,7 @@ class RexleParser
       tag += r.slice!(0,i+5)
       
       # it's a comment tag
-      tagname = '-!'
-      return [">#{tagname}<", [tag[/>--(.*)--!</,1]], ">#{tagname}/<"] 
+      return create_comment tag
     end
     
     tagname = tag[/([\w!]+)\/?<$/,1] 
