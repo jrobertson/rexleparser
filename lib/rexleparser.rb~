@@ -14,8 +14,7 @@ class RexleParser
     @instructions = s.scan(/<\?([\w-]+) ([^>]+)\?>/)
     @doctype = s.slice!(/<!DOCTYPE html>\n?/)
 
-    s2 = s.gsub('<![CDATA[','<!--').gsub(']]>','-->')
-    @to_a = reverse(parse_node(s2.strip.gsub(/<\?[^>]+>/,'').reverse))
+    @to_a = reverse(parse_node(s.strip.gsub(/<\?[^>]+>/,'').reverse))
     
   end
   
@@ -27,7 +26,7 @@ class RexleParser
 
     j = tagname
 
-    if (r =~ /^>/) == 0 then
+    if r[0][/^>/] then
 
       # end tag match
       tag = r[/^>[^<]+</]
@@ -49,7 +48,7 @@ class RexleParser
           broken_tag = tag
           return [:child, [nil, [], broken_tag]] if broken_tag
           
-        elsif tag[/^>--.*--!</] then
+        elsif tag[/^(?:>--|>\]\]).*(?:--!|\[ATADC\[!<)/] then
 
           # it's a comment tag
           return [:child, create_comment(tag)]
@@ -60,10 +59,11 @@ class RexleParser
           return [:child, text]
         end
         
-      elsif tag[/^>--.*--!</m] then
+      elsif tag[/^(?:>--|>\]\]).*(?:--!|\[ATADC\[!<)/m] then
         
-        i = r =~ /--!</
-        tag = r.slice!(0,i+4)
+        i = r =~ /(\-\-!<|\[ATADC\[!<)/
+        len = ($1).length
+        tag = r.slice!(0,i+len)
 
         # it's a comment tag
         return [:child, create_comment(tag)]
@@ -83,21 +83,28 @@ class RexleParser
   end
 
   def create_comment(tag)
-    tagname = '-!'
-    return [">#{tagname}<", [tag[/>--(.*)--!</m,1]], ">#{tagname}/<"] 
+    
+    tagname = tag[0,3] == '>--' ? '-!' : '[!'   
+    rt =  [">#{tagname}<", 
+           [tag[/(?:>--|>\]\])(.*)(?:--!|\[ATADC\[!<)/m,1]], ">#{tagname}/<"
+          ]
+
+    return rt
   end
   
   def parse_node(r, j=nil)
-    
+  
     return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
 
-    if tag and tag[0,3] == '>--' then
+    if tag and tag[0,3][/>--|>\]\]/] then
 
-      i = r =~ /<--/
-      tag += r.slice!(0,i+5)
-      
+      i = r =~ /(\-\-!<|\[ATADC\[!<)/
+      len = ($1).length
+      tag += r.slice!(0,i+len)
+  
+      #exit
       # it's a comment tag
       return create_comment tag
     end

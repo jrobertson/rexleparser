@@ -23,10 +23,10 @@ class RexleParser
     
 
   def scan_next(r, tagname)
-
+    
     j = tagname
 
-    if r[0][/^>/] then
+    if r[0] == '>' then
 
       # end tag match
       tag = r[/^>[^<]+</]
@@ -59,8 +59,8 @@ class RexleParser
           return [:child, text]
         end
         
-      elsif tag[/^(?:>--|>\]\]).*(?:--!|\[ATADC\[!<)/m] then
-        
+      elsif r[/^(?:>--|>\]\]).*(?:--!|\[ATADC\[!<)/m] then
+
         i = r =~ /(\-\-!<|\[ATADC\[!<)/
         len = ($1).length
         tag = r.slice!(0,i+len)
@@ -93,7 +93,7 @@ class RexleParser
   end
   
   def parse_node(r, j=nil)
-  
+
     return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
