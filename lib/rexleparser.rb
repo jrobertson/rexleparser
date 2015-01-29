@@ -31,7 +31,7 @@ class RexleParser
       # end tag match
       tag = r[/^>[^<]+</]
 
-      if tag[/^>.*[^\/]<$/m] then
+      if tag[/^>[^\]\-].*[^\/]<$/m] then
 
         # is it the end tag to match the start tag?
         tag = r.slice!(/^>[^<]+</)
@@ -45,11 +45,7 @@ class RexleParser
         elsif tag[/^>[^>]*\w+<$/] then
           # broken tag found
           broken_tag = tag
-          return [:child, [nil, [], broken_tag]] if broken_tag
-          
-        elsif tag[/^(?:>--|>\]\]).*(?:--!|\[ATADC\[!<)/m] then
-          # it's a comment tag
-          return [:child, create_comment(tag)]
+          return [:child, [nil, [], broken_tag]] if broken_tag          
         else
 
           text, tag =  tag.sub('>',';tg&').split(/>/,2)
