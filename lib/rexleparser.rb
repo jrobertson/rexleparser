@@ -23,7 +23,7 @@ class RexleParser
     
 
   def scan_next(r, tagname)
-
+    
     j = tagname
 
     if r[0] == '>' then
@@ -73,11 +73,11 @@ class RexleParser
         return [:newnode] if tag[/^>.*[\w!]+\/<$/]
 
       end # end of tag match
-
+      
     else
 
       # it's a text value
-      i = r =~ />["'\w]/
+      i = r =~ />(?:[\-\/"'\w]|\]\])/ # collect until a tag is found or a CDATA element
       text = r.slice!(0,i)
 
       return [:child, text] if text
@@ -95,7 +95,7 @@ class RexleParser
   end
   
   def parse_node(r, j=nil)
-
+    
     return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
@@ -106,7 +106,6 @@ class RexleParser
       len = ($1).length
       tag += r.slice!(0,i+len)
   
-      #exit
       # it's a comment tag
       return create_comment tag
     end
@@ -122,7 +121,7 @@ class RexleParser
 
     until end_tag do 
       
-      key, res = scan_next r, tagname
+      key, res = scan_next r, tagname      
       
       case key 
       when :end_tag
