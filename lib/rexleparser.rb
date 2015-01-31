@@ -24,13 +24,16 @@ class RexleParser
 
   def scan_next(r, tagname)
     
+    #puts '+scan_next : ' + r.inspect
+    
     j = tagname
 
     if r[0] == '>' then
 
       # end tag match
       tag = r[/^>[^<]+</]
-
+      #puts 'tag: '  + tag.inspect
+      
       if tag[1][/[ \w"']/] and  tag[-2] != '/'  then
 
         # is it the end tag to match the start tag?
@@ -57,7 +60,7 @@ class RexleParser
 
           return [:child, text]
         end
-      elsif tag[/>\/|\/<$/] then
+      elsif tag[/>\/|\/<$/] or tag[/^>.*[\w!]+\/<$/] then
         return [:newnode]
       elsif r[/^(?:>--|>\]\]).*(?:--!|\[ATADC\[!<)/m] then
 
@@ -69,8 +72,12 @@ class RexleParser
         return [:child, create_comment(tag)]
       else
 
-        # it's a start tag?
-        return [:newnode] if tag[/^>.*[\w!]+\/<$/]
+        r.sub!('>',';tg&')
+        
+        i = r =~ />(?:[\-\/"'\w]|\]\])/ # collect until a tag is found or a CDATA element
+        text = r.slice!(0,i)
+
+        return [:child, text] if text
 
       end # end of tag match
       
@@ -96,6 +103,7 @@ class RexleParser
   
   def parse_node(r, j=nil)
     
+    #puts '+parse_node ' + r.inspect
     return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
@@ -122,6 +130,7 @@ class RexleParser
     until end_tag do 
       
       key, res = scan_next r, tagname      
+      #puts "key: %s; res: %s" % [key, res]
       
       case key 
       when :end_tag
@@ -163,7 +172,7 @@ class RexleParser
     obj = raw_obj.clone
     return obj.reverse! if obj.is_a? String
 
-    tag = obj.pop.reverse.sub('!cdata','!-')
+    tag = obj.pop.reverse
     
     children = obj[-1]
 
