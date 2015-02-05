@@ -56,16 +56,32 @@ class RexleParser
 
           return [:child, text]
         end
+      elsif r[0,3] == '>--' then   # comment tag found
+          
+        r.slice!(0,3)
+        i = r =~ /(\-\-!<)/
+        s = r.slice!(0,i)
+        r.slice!(0,3)
+
+        tagname, content = ['-!',s]
+      
+        return [:child, [">#{tagname}<", [content], ">#{tagname}/<"]]
+        
+      elsif r[0,3] == '>]]' then   # CDATA tag found
+
+        r.slice!(0,3)
+        i = r =~ /(\[ATADC\[!<)/
+        s = r.slice!(0,i)
+        r.slice!(0,9)
+
+        tagname, content = ['[!',s]
+
+        return [:child, [">#{tagname}<", [content], ">#{tagname}/<"]]        
+        
       elsif tag[/>\/|\/<$/] or tag[/^>.*[\w!]+\/<$/] then
-        return [:newnode]
-      elsif r[/^(?:>--|>\]\]).*(?:--!|\[ATADC\[!<)/m] then
-
-        i = r =~ /(\-\-!<|\[ATADC\[!<)/
-        len = ($1).length
-        tag = r.slice!(0,i+len)
-
-        # it's a comment tag
-        return [:child, create_comment(tag)]
+                
+        return [:newnode]        
+        
       else
   
         r.sub!('>',';tg&')      
@@ -85,33 +101,12 @@ class RexleParser
       return [:child, text] if text
     end
   end
-
-  def create_comment(tag)
-    
-    tagname = tag[0,3] == '>--' ? '-!' : '[!'   
-    rt =  [">#{tagname}<", 
-           [tag[/(?:>--|>\]\])(.*)(?:--!|\[ATADC\[!<)/m,1]], ">#{tagname}/<"
-          ]
-
-    return rt
-  end
   
   def parse_node(r, j=nil)
-    
+        
     return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
-
-    if tag and tag[0,3][/>--|>\]\]/] then
-
-      i = r =~ /(\-\-!<|\[ATADC\[!<)/
-      len = ($1).length
-      tag += r.slice!(0,i+len)
-  
-      # it's a comment tag
-      return create_comment tag
-    end
-    
     tagname = tag[/([\w!]+)\/?<$/,1] 
 
     # self closing tag?

@@ -17,14 +17,11 @@ class RexleParser
     @to_a = reverse(parse_node(s.strip.gsub(/<\?[^>]+>/,'').reverse))
 
   end
-  
-  
+    
   private
-    
 
+  
   def scan_next(r, tagname)
-    
-    #puts '+scan_next : ' + r.inspect
     
     j = tagname
 
@@ -32,7 +29,6 @@ class RexleParser
 
       # end tag match
       tag = r[/^>[^<]+</]
-      #puts 'tag: '  + tag.inspect
       
       if tag[1][/[ \w"']/] and  tag[-2] != '/'  then
 
@@ -71,9 +67,8 @@ class RexleParser
         # it's a comment tag
         return [:child, create_comment(tag)]
       else
-
-        r.sub!('>',';tg&')
-        
+  
+        r.sub!('>',';tg&')      
         i = r =~ />(?:[\-\/"'\w]|\]\])/ # collect until a tag is found or a CDATA element
         text = r.slice!(0,i)
 
@@ -103,7 +98,6 @@ class RexleParser
   
   def parse_node(r, j=nil)
     
-    #puts '+parse_node ' + r.inspect
     return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
@@ -130,7 +124,6 @@ class RexleParser
     until end_tag do 
       
       key, res = scan_next r, tagname      
-      #puts "key: %s; res: %s" % [key, res]
       
       case key 
       when :end_tag
@@ -176,17 +169,8 @@ class RexleParser
     
     children = obj[-1]
 
-    if children.last.is_a?(String) then
-      ltext ||= ''
-      ltext << children.pop.reverse 
-    end
+    r = children.reverse.map {|x| reverse(x)}
     
-    ltext << children.pop.reverse if children.last.is_a?(String) 
-
-    r = children.reverse.map do |x|
-      reverse(x)
-    end
-    
-    return [tag[/[!\-\w\[]+/], ltext, get_attributes(tag), *r]
+    return [tag[/[!\-\w\[]+/], get_attributes(tag), *r]
   end  
 end
