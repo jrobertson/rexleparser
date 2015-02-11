@@ -11,6 +11,7 @@ class RexleParser
     
     super()
     s = raw_s.clone
+    return if s.empty?
     
     raw_xml, raw_instrctns = s.split(/(?=\?><\w)/,2).reverse
     @instructions = raw_instrctns.scan(/<\?([\w-]+) ([^>]+)/) if raw_instrctns
