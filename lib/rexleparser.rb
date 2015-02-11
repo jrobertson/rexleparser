@@ -11,10 +11,11 @@ class RexleParser
     
     super()
     s = raw_s.clone
-    @instructions = s.scan(/<\?([\w-]+) ([^>]+)\?>/)
+    
+    raw_xml, raw_instrctns = s.split(/(?=\?><\w)/,2).reverse
+    @instructions = raw_instrctns.scan(/<\?([\w-]+) ([^>]+)/) if raw_instrctns
     @doctype = s.slice!(/<!DOCTYPE html>\n?/)
-
-    @to_a = reverse(parse_node(s.strip.gsub(/<\?[^>]+>/,'').reverse))
+    @to_a = reverse(parse_node(raw_xml.strip.reverse))
 
   end
     
@@ -22,7 +23,7 @@ class RexleParser
 
   
   def scan_next(r, tagname)
-    
+
     j = tagname
 
     if r[0] == '>' then
@@ -103,7 +104,7 @@ class RexleParser
   end
   
   def parse_node(r, j=nil)
-        
+    
     return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0

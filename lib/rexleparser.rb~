@@ -61,7 +61,7 @@ class RexleParser
         r.slice!(0,3)
         i = r =~ /(\-\-!<)/
         s = r.slice!(0,i)
-        r.slice!(0,3)
+        r.slice!(0,4)
 
         tagname, content = ['-!',s]
       
