@@ -14,7 +14,8 @@ class RexleParser
     return if s.empty?
     
     raw_xml, raw_instrctns = s.split(/(?=\?><\w)/,2).reverse
-    @instructions = raw_instrctns.scan(/<\?([\w-]+) ([^>]+)/) if raw_instrctns
+    @instructions = raw_instrctns ? \
+                              raw_instrctns.scan(/<\?([\w-]+) ([^>]+)/) : []
     @doctype = s.slice!(/<!DOCTYPE html>\n?/)
     @to_a = reverse(parse_node(raw_xml.strip.reverse))
 
