@@ -110,7 +110,7 @@ class RexleParser
     return unless r.length > 0
 
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
-    tagname = tag[/([\w!]+)\/?<$/,1] 
+    tagname = tag[/([\w!:]+)\/?<$/,1] 
 
     # self closing tag?
     if tag[/^>\/.*#{tagname}<$/] then
@@ -169,6 +169,6 @@ class RexleParser
 
     r = children.reverse.map {|x| reverse(x)}
     
-    return [tag[/[!\-\w\[]+/], get_attributes(tag), *r]
+    return [tag[/[!\-\w:\[]+/], get_attributes(tag), *r]
   end  
 end
