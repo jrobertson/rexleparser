@@ -3,6 +3,9 @@
 # file: rexleparser.rb
 # description: used by rexle.rb
 
+class RexleParserException < Exception
+end
+
 class RexleParser
 
   attr_reader :instructions, :doctype, :to_a
@@ -118,6 +121,10 @@ class RexleParser
     end
 
     start_tag, children, end_tag = tag, [], nil
+
+    unless start_tag[1..-3][/\w+$/] then
+      raise RexleParserException, 'invalid tag found ' + start_tag 
+    end
 
     until end_tag do 
       

@@ -11,7 +11,7 @@ class RexleParser
   attr_reader :instructions, :doctype, :to_a
 
   def initialize(raw_s)
-    
+
     super()
     s = raw_s.clone
     return if s.empty?
@@ -123,7 +123,8 @@ class RexleParser
     start_tag, children, end_tag = tag, [], nil
 
     unless start_tag[1..-3][/\w+$/] then
-      raise RexleParserException, 'invalid tag found ' + start_tag 
+      raise RexleParserException, 'invalid closing tag found ' + \
+                start_tag.reverse + '; context: ' + r[0..120].reverse.inspect
     end
 
     until end_tag do 
