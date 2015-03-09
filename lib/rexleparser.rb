@@ -3,6 +3,14 @@
 # file: rexleparser.rb
 # description: used by rexle.rb
 
+
+class Attributes < Hash
+
+  def []=(k,v)
+    super(k, k != :class ? v.to_s : v)
+  end
+end
+
 class RexleParserException < Exception
 end
 
@@ -156,7 +164,7 @@ class RexleParser
     r2 = /([\w\-:]+\="[^"]*)"/
     
     r =  raw_attributes.scan(/#{r1}|#{r2}/).map(&:compact)\
-                                                .flatten.inject({}) do |r, x|
+                                  .flatten.inject(Attributes.new) do |r, x|
       attr_name, raw_val = x.split(/=/,2) 
       val = attr_name != 'class' ? raw_val[1..-1] : raw_val[1..-1].split
       r.merge(attr_name.to_sym => val)

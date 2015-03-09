@@ -3,6 +3,14 @@
 # file: rexleparser.rb
 # description: used by rexle.rb
 
+
+class Attributes < Hash
+
+  def []=(k,v)
+    super(k,v.to_s)
+  end
+end
+
 class RexleParserException < Exception
 end
 
@@ -11,7 +19,7 @@ class RexleParser
   attr_reader :instructions, :doctype, :to_a
 
   def initialize(raw_s)
-    
+
     super()
     s = raw_s.clone
     return if s.empty?
@@ -123,7 +131,8 @@ class RexleParser
     start_tag, children, end_tag = tag, [], nil
 
     unless start_tag[1..-3][/\w+$/] then
-      raise RexleParserException, 'invalid tag found ' + start_tag 
+      raise RexleParserException, 'invalid closing tag found ' + \
+                start_tag.reverse + '; context: ' + r[0..120].reverse.inspect
     end
 
     until end_tag do 
@@ -155,7 +164,7 @@ class RexleParser
     r2 = /([\w\-:]+\="[^"]*)"/
     
     r =  raw_attributes.scan(/#{r1}|#{r2}/).map(&:compact)\
-                                                .flatten.inject({}) do |r, x|
+                                  .flatten.inject(Attributes.new) do |r, x|
       attr_name, raw_val = x.split(/=/,2) 
       val = attr_name != 'class' ? raw_val[1..-1] : raw_val[1..-1].split
       r.merge(attr_name.to_sym => val)
