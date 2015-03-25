@@ -7,7 +7,7 @@
 class Attributes < Hash
 
   def []=(k,v)
-    super(k,v.to_s)
+    super(k, k != :class ? v.to_s : v)
   end
 end
 
