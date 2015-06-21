@@ -21,13 +21,17 @@ class RexleParser
   def initialize(raw_s)
 
     super()
-    s = raw_s.clone
+    s = raw_s.clone.strip
     return if s.empty?
     
-    raw_xml, raw_instrctns = s.split(/(?=\?>\s*<\w)/,2).reverse
+    raw_xml, raw_instrctns = if s.lines.first =~ /<?xml/ then
+      s.split(/(?=\?>\s*<\w)/,2).reverse
+    else
+      s
+    end
     @instructions = raw_instrctns ? \
                               raw_instrctns.scan(/<\?([\w-]+) ([^\?]+)/) : []
-    @doctype = s.slice!(/<!DOCTYPE html>\n?/)
+    @doctype = s.slice!(/<!DOCTYPE html>\n?/) if s.lines.first =~ /<\!DOCTYPE/
     @to_a = reverse(parse_node(raw_xml.strip.reverse))
 
   end
@@ -119,7 +123,6 @@ class RexleParser
   def parse_node(r, j=nil)
     
     return unless r.length > 0
-
     tag = r.slice!(/^>[^<]+</) if (r =~ /^>[^<]+</) == 0
     tagname = tag[/([\w!:]+)\/?<$/,1] 
 
