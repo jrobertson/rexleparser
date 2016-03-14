@@ -127,7 +127,7 @@ class RexleParser
     tagname = tag[/([\w!:]+)\/?<$/,1] 
 
     # self closing tag?
-    if tag[/^>\/.*#{tagname}<$/] then
+    if tag[/^>\/.*#{tagname}<$/m] then
       return [">/#{tagname}<", [], "#{tag.sub(/>\//,'>')}"]
     end
 
@@ -163,8 +163,8 @@ class RexleParser
 
   def get_attributes(raw_attributes)
     
-    r1 = /([\w\-:]+\='[^']*)'/
-    r2 = /([\w\-:]+\="[^"]*)"/
+    r1 = /([\w\-:\(\)]+\='[^']*)'/
+    r2 = /([\w\-:\(\)]+\="[^"]*)"/
     
     r =  raw_attributes.scan(/#{r1}|#{r2}/).map(&:compact)\
                                   .flatten.inject(Attributes.new) do |r, x|
