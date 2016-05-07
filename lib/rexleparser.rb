@@ -6,8 +6,35 @@
 
 class Attributes < Hash
 
+  class Value < String
+    
+    def initialize(value)
+      super(value)
+    end
+          
+    def <(val2)
+      self.to_f < val2.to_f
+    end      
+    
+    def >(val2)
+      self.to_f > val2.to_f
+    end            
+  end  
+  
   def []=(k,v)
-    super(k, k != :class ? v.to_s : v)
+    super(k, k != :class ? Value.new(v) : v)
+  end
+  
+  def merge(h)
+
+    h2 = h.inject({}) do |r, kv| 
+      k, raw_v = kv
+      v = raw_v.is_a?(String) ? Value.new(raw_v) : raw_v
+      r.merge(k => v) 
+    end
+    
+    super(h2)
+    
   end
 end
 
