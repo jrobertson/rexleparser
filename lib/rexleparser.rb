@@ -21,6 +21,10 @@ class Attributes < Hash
     end            
   end  
   
+  def initialize(h={})
+    super().merge! h
+  end
+  
   def []=(k,v)
     super(k, k != :class ? Value.new(v) : v)
   end
