@@ -18,7 +18,16 @@ class Attributes < Hash
     
     def >(val2)
       self.to_f > val2.to_f
-    end            
+    end
+    
+    def inspect()
+      self.gsub('&lt;','<',).gsub('&gt;','>').gsub('&pos;',"'")
+    end
+    
+    def to_s()
+      self.gsub('&lt;','<',).gsub('&gt;','>').gsub('&pos;',"'")
+    end
+    
   end  
   
   def initialize(h={})
