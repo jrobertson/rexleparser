@@ -21,7 +21,7 @@ class Attributes < Hash
     end
     
     def inspect()
-      self.gsub('&lt;','<',).gsub('&gt;','>').gsub('&pos;',"'")
+      super().gsub('&lt;','<',).gsub('&gt;','>').gsub('&pos;',"'")
     end
     
     def to_s()
