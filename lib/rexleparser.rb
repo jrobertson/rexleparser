@@ -9,7 +9,8 @@ class Attributes < Hash
   class Value < String
     
     def initialize(value)
-      super(value.gsub("'", '&apos;'))
+      #jr2020-04-30 super(value.gsub("'", '&apos;'))
+      super(value)
     end
           
     def <(val2)
