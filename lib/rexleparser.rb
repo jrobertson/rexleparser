@@ -26,8 +26,7 @@ class Attributes < Hash
     end
 
     def to_s(unescape: true)
-      #jr2020-07-18 self.gsub('&lt;','<',).gsub('&gt;','>').gsub('&pos;',"'")
-      self.gsub('&amp;','&').gsub('&pos;',"'") if unescape
+      unescape ? self.gsub('&amp;','&').gsub('&pos;',"'") : self
     end
 
   end
