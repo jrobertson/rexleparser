@@ -39,6 +39,16 @@ class Attributes < Hash
     super(k, k != :class ? Value.new(v) : v)
   end
 
+  def delete(key=nil)
+
+    if key then
+      super(key)
+    else
+      keys.each {|key| super(key)}
+    end
+
+  end
+
   def merge(h)
 
     h2 = h.inject({}) do |r, kv|
